@@ -1,59 +1,100 @@
-# Pipeline d'ingestion des données
+# Documentation du pipeline ETL
 
-## Objectif
-Assurer que chaque fichier CSV validé est chargé depuis `data/samples/`, contrôlé, journalisé puis envoyé vers le Data Lake cloud AWS S3 avec une organisation par date et un versioning temporel.
+## Étape 1 : Ingestion des données
 
-## Source des données
-- **Sample local** : `data/samples/sample_energy_consumption.csv`
-- **Description** : mesures de consommation énergétique par compteur (kWh) avec tarif appliqué et indicateur de période de pointe.
-- **Usage** : ce fichier est destiné aux tests locaux. Les données complètes doivent résider dans `data/raw/` (non versionné) ou être récupérées depuis la source métier.
+### 1. Objectif
+Cette étape du pipeline ETL a pour but de charger et valider les données énergétiques à partir d'un fichier CSV afin de préparer leur traitement ultérieur.
 
-## Structure attendue du CSV
-| Colonne           | Type attendu | Description                                        |
-|-------------------|--------------|----------------------------------------------------|
-| `record_id`       | string       | Identifiant unique de la mesure                    |
-| `customer_id`     | string       | Client ou site associé au compteur                 |
-| `meter_id`        | string       | Référence du compteur physique                     |
-| `reading_ts`      | datetime UTC | Horodatage ISO 8601 de la mesure                   |
-| `consumption_kwh` | float        | Consommation électrique en kWh                     |
-| `tariff_eur_kwh`  | float        | Tarif appliqué pour 1 kWh                          |
-| `is_peak`         | bool         | `true` si la mesure est prise en période de pointe |
+### 2. Structure du projet
+```
 
-Toute colonne manquante provoque l'arrêt du script. Les colonnes supplémentaires sont conservées mais signalées dans les logs.
+etl/
+├── main.py                # point d’entrée du pipeline ETL
+├── ingest_data.py         # logique d’ingestion et validation
+├── upload_data.py           # upload vers le Data Lake Cloud (AWS S3)
+logs/
+├── ingestion.log          # logs de l’ingestion
+└── s3_upload.log          # logs des uploads S3
+data/
+└── samples/
+└── sample_energy_data.csv
+.env                        # secrets AWS (non versionné)
 
-## Commande d'exécution
+````
+
+### 3. Fonctionnement du pipeline
+
+#### 3.1 Lancement
+Le pipeline est lancé via :
+
 ```bash
-python -m etl.ingest_data --bucket your-data-lake-bucket --prefix watt-about-it/raw
-```
-Options utiles :
-- `--source` : chemin d'un autre CSV local.
-- `--region` : région AWS (sinon chaîne de configuration par défaut).
-- `--dry-run` : valide et journalise sans pousser dans le cloud.
+python etl/main.py
+````
 
-Variables d'environnement supportées :
-- `DATA_LAKE_BUCKET`
-- `DATA_LAKE_PREFIX`
-- `AWS_REGION`
+#### 3.2 Ingestion des données (`ingest_csv`)
 
-## Exemple de sortie de logs
-```
-2025-01-08T09:30:02Z [INFO] Starting ingestion run 20250108T093002Z
-2025-01-08T09:30:02Z [INFO] Loading source file: C:\\repo\\data\\samples\\sample_energy_consumption.csv
-2025-01-08T09:30:02Z [INFO] Dataset shape: 5 rows x 7 columns
-2025-01-08T09:30:02Z [INFO] Schema validation successful for columns: ['record_id', ...]
-2025-01-08T09:30:03Z [INFO] Uploading ... to s3://watt-about-it-data/watt-about-it/raw/2025/01/08/sample_energy_consumption_20250108T093002Z_093003.csv
-2025-01-08T09:30:04Z [INFO] Ingestion successful. Cloud destination: s3://watt-about-it-data/watt-about-it/raw/2025/01/08/sample_energy_consumption_20250108T093002Z_093003.csv
-```
-Le fichier complet des logs est généré sous `logs/ingestion_<run_id>.log` et n'est pas versionné.
+* Le fichier CSV est chargé dans un DataFrame pandas avec le séparateur tabulation (`\t`).
+* Affiche et enregistre dans les logs les dimensions du dataset.
+* La structure du DataFrame est validée via `validate_schema()` :
 
-## Emplacement final dans le Data Lake
-```
-s3://<bucket>/<prefix>/<YYYY>/<MM>/<DD>/<nom_source>_<run_id>_<HHMMSS>.csv
-```
-- `bucket` : valeur de `--bucket` ou `DATA_LAKE_BUCKET`.
-- `prefix` : valeur de `--prefix` ou `DATA_LAKE_PREFIX`.
-- Les sous-dossiers `YYYY/MM/DD` assurent l'organisation temporelle.
-- Le suffixe `<run_id>_<HHMMSS>` garantit le versioning.
+  * **Colonnes manquantes** → erreur, ingestion stoppée
+  * **Colonnes supplémentaires** → avertissement
 
-Avec les paramètres par défaut, un run réussi produira par exemple :
-`s3://watt-about-it-data/watt-about-it/raw/2025/01/08/sample_energy_consumption_20250108T093002Z_093003.csv`.
+#### 3.3 Upload vers le Cloud (`upload_to_s3`)
+
+* Le fichier validé est envoyé vers un **bucket S3**.
+* Organisation du chemin par date : `prefix/YYYY-MM-DD/nom_fichier.csv`
+* Le versioning S3 doit être activé pour conserver les différentes versions du fichier.
+* Logs générés :
+
+  * **INFO** : début et fin de l’upload, chemin final dans le bucket
+  * **ERROR** : échec de l’upload
+
+#### 3.4 Logging global
+
+Tous les événements sont consignés dans `logs/etl_pipeline.log` :
+
+| Niveau  | Informations loggées                                                                                              |
+| ------- | ----------------------------------------------------------------------------------------------------------------- |
+| INFO    | Début et fin de l’ingestion, dimensions du dataset, début et fin de l’upload, chemin final S3, succès du pipeline |
+| WARNING | Colonnes supplémentaires détectées                                                                                |
+| ERROR   | Colonnes manquantes, impossibilité de lire le CSV, échec de l’upload                                              |
+
+---
+
+### 4. Colonnes attendues
+
+| Colonne                        | Type  |
+| ------------------------------ | ----- |
+| pays                           | str   |
+| ville                          | str   |
+| cout_energie_eurp_mwh          | float |
+| part_bas_carbone_pourcent      | int   |
+| intensite_co2_g_kwh            | int   |
+| fiabilite_reseau_indice        | float |
+| potentiel_solaire_kwh_kwp_an   | int   |
+| indice_potentiel_eolien        | float |
+| indice_risque_politique        | float |
+| indice_dependance_importations | float |
+| temperature_moy_c              | float |
+| incitations_fiscales_euro_mwh  | float |
+
+---
+
+### 5. Messages affichés à l’exécution
+
+* Chargement du fichier et dimensions du dataset
+* Avertissements ou erreurs liés au schéma
+* Chemin final du fichier uploadé vers le Cloud
+* Confirmation de l’ingestion et de l’upload réussis
+
+---
+
+### 6. Conclusion
+
+Cette étape du pipeline ETL assure que :
+
+1. Les données énergétiques sont **chargées correctement**.
+2. La **structure est conforme aux attentes**.
+3. Les fichiers validés sont **stockés dans le Data Lake Cloud** avec versioning.
+4. Toutes les opérations sont **journalisées pour traçabilité et audit**, ce qui est essentiel pour un suivi MLOps et RGPD.
