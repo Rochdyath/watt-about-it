@@ -61,7 +61,9 @@ __marimo__/
 
 # Data
 
-data/
+data/raw/
+data/processed/
+logs/
 
 # Logs
 logs/
