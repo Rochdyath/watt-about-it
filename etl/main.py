@@ -1,31 +1,31 @@
 import os
-from ingest_data import ingest_csv
+from ingest_data import ingest_file
 from upload_data import upload_to_s3
 
 def main():
     print("Lancement du pipeline ETL")
 
-    # Chemin du fichier échantillon
-    sample_path = os.path.join("data", "samples", "sample_energy_data.csv")
-    if not os.path.exists(sample_path):
-        print(f"ERREUR : fichier {sample_path} introuvable")
+    # Nouveau fichier brut RTE
+    csv_path = os.path.join("data", "samples", "eCO2mix_RTE_Annuel-Definitif_2023.xls")
+
+    if not os.path.exists(csv_path):
+        print(f"ERREUR : fichier introuvable : {csv_path}")
         return
 
-    # ------------------------
-    # Étape 1 : Ingestion
-    # ------------------------
-    print("Étape 1 : Ingestion")
-    ingest_csv(sample_path)
+    print("\n=== Étape 1 : Ingestion ===")
+    df = ingest_file(csv_path)
 
-    # ------------------------
-    # Étape 2 : Upload S3
-    # ------------------------
-    print("\nÉtape 2 : Stockage dans le Data Lake (AWS S3)")
-    bucket_name = "wai-data"  # Remplacer par ton bucket
-    prefix = "samples"             # Préfixe dans le bucket
-    upload_to_s3(sample_path, bucket_name, prefix=prefix)
+    if df is None:
+        print("Pipeline interrompu (ingestion échouée).")
+        return
 
-    print("\nPipeline ETL terminé !")
+    print("\n=== Étape 2 : Upload Cloud (AWS S3) ===")
+    bucket = "wai-data"
+    prefix = "samples"
+
+    upload_to_s3(csv_path, bucket, prefix)
+
+    print("\nPipeline ETL terminé avec succès !")
 
 if __name__ == "__main__":
     main()
