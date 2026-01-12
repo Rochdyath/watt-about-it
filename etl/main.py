@@ -2,7 +2,7 @@ import os
 from ingest_data import ingest_csv
 from upload_data import upload_to_s3
 
-def main():
+def ingest_sample():
     print("Lancement du pipeline ETL")
 
     # Chemin du fichier échantillon
@@ -26,6 +26,34 @@ def main():
     upload_to_s3(sample_path, bucket_name, prefix=prefix)
 
     print("\nPipeline ETL terminé !")
+
+def ingest_processed():
+    print("Lancement du pipeline ETL")
+
+    # Chemin du fichier échantillon
+    path = os.path.join("data", "processed", "dataset_france.csv")
+    if not os.path.exists(path):
+        print(f"ERREUR : fichier {path} introuvable")
+        return
+
+    # ------------------------
+    # Étape 1 : Ingestion
+    # ------------------------
+    print("Étape 1 : Ingestion")
+    ingest_csv(path)
+
+    # ------------------------
+    # Étape 2 : Upload S3
+    # ------------------------
+    print("\nÉtape 2 : Stockage dans le Data Lake (AWS S3)")
+    bucket_name = "wai-data"  # Remplacer par ton bucket
+    prefix = "processed"             # Préfixe dans le bucket
+    upload_to_s3(path, bucket_name, prefix=prefix)
+
+    print("\nPipeline ETL terminé !")
+
+def main():
+    ingest_processed()
 
 if __name__ == "__main__":
     main()
