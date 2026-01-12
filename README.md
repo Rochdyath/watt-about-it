@@ -1,42 +1,110 @@
-# watt-about-it
+# Watt-About-It
 
-## Objectif
 Prédire la satisfaction client à partir de données d’enquête.
-
-## Équipe
-- Lead Data : DIBLEU Joël  
-- Lead MLOps : BACHABI Rochdyath  
-- API : DAOUDI Mohamed  
-- RGPD : FALIGANT Marc-Alfred  
-
-## Jeu de données et KPI
-| Colonne                          | Description                                                         | Exemple |
-| -------------------------------- | ------------------------------------------------------------------- | ------- |
-| **country**                      | Pays de la ville                                                    | France  |
-| **city**                         | Ville analysée                                                      | Lyon    |
-| **energy_cost_usd_mwh**          | Coût moyen de l’énergie (USD/MWh)                                   | 55.20   |
-| **low_carbon_mix_percent**       | Part du mix électrique bas-carbone (%)                              | 72      |
-| **co2_intensity_g_per_kwh**      | Intensité carbone du réseau (gCO₂/kWh)                              | 180     |
-| **grid_reliability_index**       | Fiabilité du réseau (0 à 1)                                         | 0.85    |
-| **solar_potential_kwh_kwp_year** | Potentiel solaire (kWh/kWc/an)                                      | 1850    |
-| **wind_potential_index**         | Potentiel éolien (0 à 1)                                            | 0.58    |
-| **political_risk_index**         | Stabilité politique (0 = risque élevé, 1 = très stable)             | 0.91    |
-| **import_dependence_index**      | Dépendance énergétique (0 = indépendant, 1 = entièrement dépendant) | 0.45    |
-| **avg_temperature_c**            | Température moyenne annuelle (°C)                                   | 17.5    |
-| **fiscal_incentives_usd_mwh**    | Incitations fiscales (USD/MWh)                                      | 4       |
-
-
-## Plan de travail initial
-1. Mise en place du dépôt Git et de la structure projet  
-2. Développement ETL pour préparation des données  
-3. Entraînement et suivi avec MLflow  
-4. Déploiement via FastAPI + Docker  
-5. Mise en place de CI/CD et monitoring  
 
 ---
 
-## Mise en perspective
-Ce dépôt Git sera la colonne vertébrale du projet.  
-Toutes les prochaines séances s’appuieront dessus : ajout des scripts ETL, suivi MLflow, CI/CD, API, puis monitoring.  
+## Équipe & Rôles
 
-**Prochaine étape :** test FastAPI et premières exécutions en conteneur.
+| Rôle                 | Nom                  |
+| -------------------- | -------------------- |
+| **Lead Data**        | DIBLEU Joël          |
+| **Lead MLOps**       | BACHABI Rochdyath    |
+| **Développeur API**  | DAOUDI Mohamed       |
+| **Responsable RGPD** | FALIGANT Marc-Alfred |
+
+---
+
+## Jeu de données
+
+Le jeu de données analysé contient des indicateurs énergétiques par ville :
+
+| Colonne                        | Description                    |
+| ------------------------------ | ------------------------------ |
+| pays                           | Pays de la ville               |
+| ville                          | Ville analysée                 |
+| cout_energie_eurp_mwh          | Coût moyen de l’énergie        |
+| part_bas_carbone_pourcent      | Mix électrique bas carbone (%) |
+| intensite_co2_g_kwh            | Intensité carbone CO₂          |
+| fiabilite_reseau_indice        | Fiabilité du réseau (0–1)      |
+| potentiel_solaire_kwh_kwp_an   | Potentiel solaire              |
+| indice_potentiel_eolien        | Indice éolien                  |
+| indice_risque_politique        | Stabilité politique            |
+| indice_dependance_importations | Dépendance énergétique         |
+| temperature_moy_c              | Température moyenne            |
+| incitations_fiscales_euro_mwh  | Incitations fiscales           |
+
+---
+
+## Structure du projet
+
+```
+├── data/                     # Jeux de données et fichiers bruts
+│   └── samples/              # Échantillons pour tests ETL
+│
+├── etl/                      # Scripts d’ingestion et transformation
+│   ├── ingest_data.py
+│   ├── upload_s3.py
+│   └── main.py
+│
+├── training/                 # Scripts & notebooks ML
+│
+├── serving/                  # API FastAPI + Docker
+│
+├── docker/                   # Dockerfiles & CI/CD
+│
+├── docs/                     # Documentation (RGPD, ETL, architecture…)
+│   └── etl.md
+│
+├── logs/                     # Fichiers de logs ETL & API
+│
+└── README.md
+```
+
+---
+
+## Plan de travail initial
+
+### **1. Mise en place du dépôt et de la structure projet**
+
+* Création du dépôt Git
+* Structuration complète
+* Documentation et guide d’onboarding
+
+### **2. Développement ETL**
+
+* **Ingestion** du CSV depuis `data/samples/`
+* **Validation du schéma** et des types
+* **Logging détaillé**
+* **Upload des données validées** vers AWS S3 (Data Lake)
+* **Gestion des versions** par date
+
+### **3. Entraînement & Suivi MLflow**
+
+* Préparation des features
+* Entraînement du modèle
+* Tracking avec MLflow
+* Gestion du versioning ML
+
+### **4. Déploiement via FastAPI + Docker**
+
+* Création d’une API prédictive
+* Conteneurisation Docker
+* Tests et première exécution sur EC2
+
+### **5. CI/CD & Monitoring**
+
+* GitHub Actions
+* Monitoring : logs, métriques, dérive du modèle
+
+---
+
+## Mise en perspective RGPD
+
+Le projet prévoit :
+* Analyse des risques (Data Protection Impact Assessment)
+* Identification des données personnelles (→ ici : aucune)
+* Mise en place d’un registre de traitements
+* Traçabilité complète de l’ETL (logs, versioning)
+* Sécurisation Cloud : IAM, clés dans `.env`, policy S3 restreinte
+
