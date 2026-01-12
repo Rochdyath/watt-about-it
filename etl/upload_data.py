@@ -46,4 +46,3 @@ def upload_to_s3(local_file_path: str, bucket_name: str, prefix: str = "data"):
         logging.error(f"Échec upload S3 : {e}")
         print(f"ERREUR upload S3 : {e}")
         return False
-
