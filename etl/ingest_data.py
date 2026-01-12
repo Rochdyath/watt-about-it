@@ -1,8 +1,7 @@
 import pandas as pd
 import logging
 import os
-import unicodedata
-import re
+from typing import List, Dict
 
 # ---------------------------
 # Configuration des logs
@@ -17,55 +16,32 @@ logging.basicConfig(
 )
 
 # ---------------------------
-# Colonnes attendues : données RTE France entière
+# Colonnes attendues
 # ---------------------------
-EXPECTED_COLUMNS = [
-    "Périmètre",
-    "Nature",
-    "Date",
-    "Heures",
-    "Consommation",
-    "Prévision J-1",
-    "Prévision J",
-    "Fioul",
-    "Charbon",
-    "Gaz",
-    "Nucléaire",
-    "Eolien",
-    "Solaire",
-    "Hydraulique",
-    "Pompage",
-    "Bioénergies",
-    "Ech. physiques",
-    "Taux de Co2",
-    "Ech. comm. Angleterre",
-    "Ech. comm. Espagne",
-    "Ech. comm. Italie",
-    "Ech. comm. Suisse",
-    "Ech. comm. Allemagne-Belgique",
-    "Fioul - TAC",
-    "Fioul - Cogén.",
-    "Fioul - Autres",
-    "Gaz - TAC",
-    "Gaz - Cogén.",
-    "Gaz - CCG",
-    "Gaz - Autres",
-    "Hydraulique - Lacs",
-    "Hydraulique - STEP turbinage",
-    "Bioénergies - Déchets",
-    "Bioénergies - Biomasse",
-    "Bioénergies - Biogaz",
-    "Déstockage batterie",
-    "Eolien terrestre",
-    "Eolien offshore"
-]
+EXPECTED_COLUMNS = {
+    "pays": str,
+    "ville": str,
+    "cout_energie_eurp_mwh": float,
+    "part_bas_carbone_pourcent": int,
+    "intensite_co2_g_kwh": int,
+    "fiabilite_reseau_indice": float,
+    "potentiel_solaire_kwh_kwp_an": int,
+    "indice_potentiel_eolien": float,
+    "indice_risque_politique": float,
+    "indice_dependance_importations": float,
+    "temperature_moy_c": float,
+    "incitations_fiscales_euro_mwh": float
+}
 
 def validate_schema(df: pd.DataFrame) -> bool:
-    """Vérifie que le DataFrame contient les colonnes requises."""
+    """
+    Vérifie que le DataFrame contient les colonnes attendues
+    et remonte les erreurs / avertissements appropriés.
+    """
 
     df_columns = set(df.columns)
-    expected = set(EXPECTED_COLUMNS)
-    print("a", df_columns)
+    expected = set(EXPECTED_COLUMNS.keys())
+
     missing = expected - df_columns
     extra = df_columns - expected
 
@@ -75,56 +51,31 @@ def validate_schema(df: pd.DataFrame) -> bool:
         return False
 
     if extra:
-        logging.warning(f"Colonnes supplémentaires : {extra}")
-        print(f"AVERTISSEMENT : colonnes supplémentaires détectées : {extra}")
+        logging.warning(f"Colonnes supplémentaires détectées : {extra}")
+        print(f"AVERTISSEMENT : colonnes supplémentaires : {extra}")
 
     return True
 
-def ingest_file(path: str):
+
+def ingest_csv(path: str):
     logging.info(f"Début de l’ingestion du fichier : {path}")
     print(f"Chargement du fichier : {path}")
 
-    if not os.path.exists(path):
-        logging.error(f"Fichier introuvable : {path}")
-        print(f"ERREUR : fichier introuvable.")
-        return None
-
-    # Choix du loader selon l’extension
-    ext = os.path.splitext(path)[1].lower()
-
     try:
-        if ext == ".csv":
-            df = pd.read_csv(path, sep="\t", encoding="latin-1")
-        elif ext == ".xls":
-            try:
-                df = pd.read_excel(path, engine="xlrd")
-            except Exception as e:
-                # Si le fichier n'est PAS un vrai XLS → le lire comme CSV
-                if "BOF" in str(e) or "Unsupported format" in str(e):
-                    df = pd.read_csv(path, sep="\t", encoding="latin-1")
-                else:
-                    raise e
-            # df = pd.read_excel(path, engine="xlrd")
-        elif ext == ".xlsx":
-            df = pd.read_excel(path, engine="openpyxl")
-        else:
-            logging.error(f"Extension non supportée : {ext}")
-            print(f"ERREUR : format non supporté : {ext}")
-            return None
+        df = pd.read_csv(path, sep=';')
     except Exception as e:
-        logging.error(f"Impossible de lire le fichier ({ext}) : {e}")
-        print("ERREUR : fichier illisible.")
-        return None
+        logging.error(f"Impossible de lire le fichier CSV : {e}")
+        print(f"ERREUR : impossible de lire le fichier.")
+        return
 
     print(f"Dimensions du dataset : {df.shape[0]} lignes — {df.shape[1]} colonnes")
     logging.info(f"Dataset chargé : {df.shape[0]} lignes, {df.shape[1]} colonnes")
 
-    # Vérifier le schéma
+    # Vérification du schéma
     if not validate_schema(df):
         logging.error("Structure invalide. Ingestion stoppée.")
-        print("Pipeline interrompu (ingestion échouée).")
-        return None
+        print("Ingestion annulée (structure invalide).")
+        return
 
+    logging.info("Ingestion terminée avec succès.")
     print("Ingestion réussie !")
-    return df
-
