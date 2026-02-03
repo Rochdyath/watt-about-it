@@ -11,8 +11,6 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-from serving.utils import download_latest_model
-
 # =========================
 # Logger standard
 # =========================
@@ -72,9 +70,6 @@ app = FastAPI(title="Fil Rouge – API IA Datacenter")
 # =========================
 APP_DIR = Path(__file__).resolve().parent
 MODEL_PATH = APP_DIR / "models" / "datacenter_suitability_model.joblib"
-MODEL_PREFIX = os.getenv("S3_MODEL_PREFIX")
-
-download_latest_model(BUCKET_NAME, MODEL_PREFIX, MODEL_PATH)
 
 model = joblib.load(MODEL_PATH)
 
