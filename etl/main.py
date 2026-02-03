@@ -31,7 +31,7 @@ def ingest_processed():
     print("Lancement du pipeline ETL")
 
     # Chemin du fichier échantillon
-    path = os.path.join("data", "processed", "dataset_france.csv")
+    path = os.path.join("data", "processed", "datacenter_dataset_complet.csv")
     if not os.path.exists(path):
         print(f"ERREUR : fichier {path} introuvable")
         return
