@@ -1,6 +1,14 @@
 import boto3
 from pathlib import Path
+import os
 
+from dotenv import load_dotenv
+load_dotenv()
+
+APP_DIR = Path(__file__).resolve().parent
+MODEL_PATH = APP_DIR / "models" / "datacenter_suitability_model.joblib"
+MODEL_PREFIX = os.getenv("S3_MODEL_PREFIX")
+BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 
 def download_latest_model(bucket_name: str, prefix: str, local_path: str):
 
@@ -19,3 +27,5 @@ def download_latest_model(bucket_name: str, prefix: str, local_path: str):
     print(f"Dernier modèle téléchargé depuis s3://{bucket_name}/{latest_file} -> {local_path}")
     
     return local_path
+
+download_latest_model(BUCKET_NAME, MODEL_PREFIX, MODEL_PATH)
