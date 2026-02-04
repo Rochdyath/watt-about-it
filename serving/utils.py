@@ -6,7 +6,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 APP_DIR = Path(__file__).resolve().parent
-MODEL_PATH = APP_DIR / "models" / "datacenter_suitability_model.joblib"
+MODEL_DIR = APP_DIR / "models"
+MODEL_DIR.mkdir(exist_ok=True)
+
+MODEL_PATH = MODEL_DIR / "datacenter_suitability_model.joblib"
+
 MODEL_PREFIX = os.getenv("S3_MODEL_PREFIX")
 BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 
