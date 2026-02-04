@@ -2,7 +2,12 @@
 
 ### Build
 ```bash
-docker build -f docker/Dockerfile.train -t filrouge-train:1.0 .
+docker build -f docker/Dockerfile.train -t filrouge-train .
+```
+
+### MLFLOW
+```bash
+mlflow ui
 ```
 
 ### Run
@@ -10,7 +15,7 @@ docker build -f docker/Dockerfile.train -t filrouge-train:1.0 .
 docker run --rm \
   -v "$(pwd)/data/processed:/app/data/processed" \
   -v "$(pwd)/training/models:/app/models" \
-  filrouge-train:1.0
+  filrouge-train
 ```
 
 ### Explication des volumes
