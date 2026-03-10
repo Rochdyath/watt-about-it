@@ -1,0 +1,11 @@
+name: Incident de sécurité
+description: Déclarer un incident de sécurité
+title: "[SEC] "
+labels: ["security"]
+body:
+  - type: textarea
+    id: details
+    attributes:
+      label: Détails de l'incident
+    validations:
+      required: true

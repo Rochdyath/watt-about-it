@@ -1,0 +1,28 @@
+# Privacy Notice – Watt about it
+
+## Finalité
+
+Informer les entreprises des données utilisées pour produire une estimation énergétique.
+
+## Données collectées
+
+- Caractéristiques du bâtiment
+- Données de consommation énergétique
+- Données météo
+  Aucune donnée personnelle directe n'est collectée.
+
+## Usage
+
+Les données servent uniquement au calcul du coût énergétique et à la recommandation d'offre.
+
+## Partage
+
+Aucun partage de données avec des tiers.
+
+## Stockage
+
+Azure Blob Storage, région UE.
+
+## Contact
+
+Toute question : référent RGPD du projet.

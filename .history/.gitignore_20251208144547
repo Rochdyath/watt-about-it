@@ -1,0 +1,40 @@
+# OS & editor artifacts
+.DS_Store
+.idea/
+.vscode/
+.ipynb_checkpoints/
+
+# Python caches & builds
+__pycache__/
+*.py[cod]
+build/
+dist/
+*.egg-info/
+
+# Environments
+.venv/
+venv/
+.env
+.env.*
+.envrc
+
+# Data, logs, artifacts
+data/**
+!data/.gitkeep
+!data/samples/
+!data/samples/**
+mlruns/
+artifacts/
+logs/
+docs/evidence/raw/**
+output.csv
+*.log
+*.sqlite
+*.db
+.parquet
+
+# Credentials & keys
+*.pem
+*.key
+*.crt
+*.p12

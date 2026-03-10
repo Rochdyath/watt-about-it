@@ -1,0 +1,19 @@
+# Risk Register – Watt about it
+
+## Objectif
+
+Identifier et documenter les risques liés au traitement des données.
+
+## Risques principaux
+
+- Fuite de données à cause d'un espace de stockage objet mal configuré
+- Secrets exposés dans Git
+- Journaux trop bavards contenant potentiellement des informations sensibles
+- Modèle entraîné sur un jeu de données incorrect
+
+## Atténuation
+
+- Espaces de stockage privés et IAM minimal
+- Fichiers `.env` hors Git et gestionnaire de secrets dédié
+- Validation automatique des journaux
+- Contrôle de schéma à l'ingestion
